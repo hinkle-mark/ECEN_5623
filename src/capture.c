@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <syslog.h>
 //
 #include <getopt.h>				/* getopt_long() */	
 //
@@ -83,7 +84,7 @@ struct buffer          *buffers;
 static unsigned int     n_buffers;
 static int              out_buf;
 static int              force_format=1;
-static int              frame_count = 30;
+static int              frame_count = 1;
 //
 char ppm_header[]="P6\n#9999999999 sec 9999999999 msec \n"HRES_L_STR"x"VRES_L_STR"\n255\n";
 char ppm_dumpname[]="test00000000.ppm";
@@ -1035,65 +1036,21 @@ static void usage(FILE *fp, int argc, char **argv)
  */
 int main(int argc, char **argv)
 {
+    //io = IO_METHOD_MMAP;
+    //syslog(LOG_NOTICE, "IO METHOD = MMAP");
+    //printf("IO METHOD = MMAP\r\n");
+    
+    //io = IO_METHOD_READ;
+    //syslog(LOG_NOTICE, "IO METHOD = READ");
+    //printf("IO METHOD = READ\r\n");
 
-    for (;;)
-    {
-        int idx;
-        int c;
-
-        c = getopt_long(argc, argv,
-                    short_options, long_options, &idx);
-
-        if (-1 == c)
-            break;
-
-        switch (c)
-        {
-            case 0: /* getopt_long() flag */
-                break;
-
-            case 'd':
-                dev_name = optarg;
-                break;
-
-            case 'h':
-                usage(stdout, argc, argv);
-                exit(EXIT_SUCCESS);
-
-            case 'm':
-                io = IO_METHOD_MMAP;
-                break;
-
-            case 'r':
-                io = IO_METHOD_READ;
-                break;
-
-            case 'u':
-                io = IO_METHOD_USERPTR;
-                break;
-
-            case 'o':
-                out_buf++;
-                break;
-
-            case 'f':
-                force_format++;
-                break;
-
-            case 'c':
-                errno = 0;
-                frame_count = strtol(optarg, NULL, 0);
-                if (errno)
-                        errno_exit(optarg);
-                break;
-
-            default:
-                usage(stderr, argc, argv);
-                exit(EXIT_FAILURE);
-        }
-    }
+    io = IO_METHOD_USERPTR;
+    syslog(LOG_NOTICE, "IO METHOD = USERPTR");
+    printf("IO METHOD = USERPTR\r\n");
 
     capture_init(RES_LOW);
+    usage(stdout, argc, argv);
+
     mainloop();
     capture_uninit();
     fprintf(stderr, "\n");
@@ -1103,7 +1060,7 @@ int main(int argc, char **argv)
 void capture_init(res_t res)
 {
     dev_name = "/dev/video0";   //device MMIO loc
-            
+                        
     open_device();              //identifies device and opens file
     init_device();              //verifies compatibiliy and sets resolution
     start_capturing();          //sets up buffers to hold images
