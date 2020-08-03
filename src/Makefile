@@ -7,21 +7,21 @@ CFLAGS= -O0 -g $(INCLUDE_DIRS) $(CDEFS)
 LIBS= -lrt
 
 HFILES= 
-CFILES= rt-transformation.c
+CFILES= capture.c
 
 SRCS= ${HFILES} ${CFILES}
 OBJS= ${CFILES:.c=.o}
 
-all:	rt-transformation
+all:	capture
 
 clean:
 	-rm -f *.o *.d
-	-rm -f rt-transformation
+	-rm -f capture
 
 distclean:
 	-rm -f *.o *.d
 
-rt-transformation: ${OBJS}
+capture: ${OBJS}
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $@.o $(LIBS)
 
 depend:
