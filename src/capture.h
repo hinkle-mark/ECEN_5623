@@ -40,3 +40,4 @@ typedef enum
 //
 void capture_init(res_t res);
 void capture_uninit(void);
+int capture_photo(void);

@@ -1014,7 +1014,7 @@ int main(int argc, char **argv)
 {
     capture_init(RES_LOW);
 
-    mainloop();
+    capture_photo();
     
     capture_uninit();
     
@@ -1049,4 +1049,54 @@ void capture_uninit(void)
     stop_capturing();       //turn stream off for userptr method
     uninit_device();        //free the memory used for buffers
     close_device();         //close the file
-}    
+}   
+
+int capture_photo(void)
+{
+    struct timespec read_delay;
+    struct timespec time_error;
+
+    read_delay.tv_sec=0;
+    read_delay.tv_nsec=30000;
+
+    for (;;)
+	{
+		fd_set fds;
+		struct timeval tv;
+		int r;
+
+		FD_ZERO(&fds);
+		FD_SET(fd, &fds);
+
+		/* Timeout. */
+		tv.tv_sec = 2;
+		tv.tv_usec = 0;
+
+		r = select(fd + 1, &fds, NULL, NULL, &tv);
+
+		if (-1 == r)
+		{
+			if (EINTR == errno)
+				continue;
+			errno_exit("select");
+		}
+
+		if (0 == r)
+		{
+			fprintf(stderr, "select timeout\n");
+			exit(EXIT_FAILURE);
+		}
+
+		if (read_frame())
+		{
+			if(nanosleep(&read_delay, &time_error) != 0)
+				perror("nanosleep");
+			else
+				printf("time_error.tv_sec=%ld, time_error.tv_nsec=%ld\n", time_error.tv_sec, time_error.tv_nsec);
+
+			break;
+		}
+	}
+    
+	return 0;
+} 
