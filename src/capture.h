@@ -29,3 +29,14 @@
 
 // Typedefs & Enums
 //
+typedef enum
+{
+	RES_LOW,
+	RES_MED,
+	RES_HIGH
+} res_t;
+
+// Function Declarations
+//
+void capture_init(res_t res);
+void capture_uninit(void);

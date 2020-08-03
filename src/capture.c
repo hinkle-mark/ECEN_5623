@@ -1035,10 +1035,6 @@ static void usage(FILE *fp, int argc, char **argv)
  */
 int main(int argc, char **argv)
 {
-    if(argc > 1)
-        dev_name = argv[1];
-    else
-        dev_name = "/dev/video0";
 
     for (;;)
     {
@@ -1097,13 +1093,26 @@ int main(int argc, char **argv)
         }
     }
 
-    open_device();
-    init_device();
-    start_capturing();
+    capture_init(RES_LOW);
     mainloop();
-    stop_capturing();
-    uninit_device();
-    close_device();
+    capture_uninit();
     fprintf(stderr, "\n");
     return 0;
 }
+
+void capture_init(res_t res)
+{
+    dev_name = "/dev/video0";   //device MMIO loc
+            
+    open_device();              //identifies device and opens file
+    init_device();              //verifies compatibiliy and sets resolution
+    start_capturing();          //sets up buffers to hold images
+}
+
+
+void capture_uninit(void)
+{
+    stop_capturing();       //turn stream off for userptr method
+    uninit_device();        //free the memory used for buffers
+    close_device();         //close the file
+}    
