@@ -55,6 +55,10 @@
 #define HRES_L_STR			"640"
 #define VRES_L 				480
 #define VRES_L_STR			"480"
+// control IO method...
+#define IO_READ				1
+#define IO_MMAP				0
+#define IO_USERPTR			0
 
 // Typedefs, Structs, & Enums
 //
@@ -73,12 +77,19 @@ struct buffer
 
 // Globals
 //
+#if 		(IO_READ)
+static enum io_method   io = IO_METHOD_READ;
+#elif		(IO_MMAP)
+static enum io_method   io = IO_METHOD_MMAP;
+#elif		(IO_USERPTR)
+static enum io_method   io = IO_METHOD_USERPTR;
+#else
+#error "Must define some IO Method \r\n"
+#endif
+//	
 static struct v4l2_format fmt;
 //
 static char            *dev_name;
-//static enum io_method   io = IO_METHOD_USERPTR;
-//static enum io_method   io = IO_METHOD_READ;
-static enum io_method   io = IO_METHOD_MMAP;
 static int              fd = -1;
 struct buffer          *buffers;
 static unsigned int     n_buffers;
@@ -471,72 +482,6 @@ static int read_frame(void)
 }
 
 
-/* Func: xxxxx
- * Desc: xxxxx
- * Params:
- * 	void
- * Return:
- * 	void
- */
-static void mainloop(void)
-{
-    unsigned int count;
-    struct timespec read_delay;
-    struct timespec time_error;
-
-    read_delay.tv_sec=0;
-    read_delay.tv_nsec=30000;
-
-    count = frame_count;
-
-    while (count > 0)
-    {
-        for (;;)
-        {
-            fd_set fds;
-            struct timeval tv;
-            int r;
-
-            FD_ZERO(&fds);
-            FD_SET(fd, &fds);
-
-            /* Timeout. */
-            tv.tv_sec = 2;
-            tv.tv_usec = 0;
-
-            r = select(fd + 1, &fds, NULL, NULL, &tv);
-
-            if (-1 == r)
-            {
-                if (EINTR == errno)
-                    continue;
-                errno_exit("select");
-            }
-
-            if (0 == r)
-            {
-                fprintf(stderr, "select timeout\n");
-                exit(EXIT_FAILURE);
-            }
-
-            if (read_frame())
-            {
-                if(nanosleep(&read_delay, &time_error) != 0)
-                    perror("nanosleep");
-                else
-                    printf("time_error.tv_sec=%ld, time_error.tv_nsec=%ld\n", time_error.tv_sec, time_error.tv_nsec);
-
-                count--;
-                break;
-            }
-
-            /* EAGAIN - continue select loop unless count done. */
-            if(count <= 0) break;
-        }
-
-        if(count <= 0) break;
-    }
-}
 
 
 /* Func: xxxxx
@@ -1024,17 +969,11 @@ int main(int argc, char **argv)
 
 void capture_init(res_t res)
 {
-	//io = IO_METHOD_MMAP;
-    //syslog(LOG_NOTICE, "IO METHOD = MMAP");
-    //printf("IO METHOD = MMAP\r\n");
-    
-    io = IO_METHOD_READ;
-    syslog(LOG_NOTICE, "IO METHOD = READ");
-    printf("IO METHOD = READ\r\n");
-
-    //io = IO_METHOD_USERPTR;
-    //syslog(LOG_NOTICE, "IO METHOD = USERPTR");
-    //printf("IO METHOD = USERPTR\r\n");
+    //syslog(LOG_INFO, "IO METHOD = READ:%d MMAP:%d USERPTR:%d \r\n",
+	//	IO_READ, IO_MMAP, IO_USERPTR);
+	
+    printf("IO METHOD = READ:%d MMAP:%d USERPTR:%d \r\n",
+		IO_READ, IO_MMAP, IO_USERPTR);
 	
     dev_name = "/dev/video0";   //device MMIO loc
                         
