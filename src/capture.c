@@ -1001,30 +1001,6 @@ static void open_device(void)
 }
 
 
-/* Func: xxxxx
- * Desc: xxxxx
- * Params:
- * 	void
- * Return:
- * 	void
- */
-static void usage(FILE *fp, int argc, char **argv)
-{
-        fprintf(fp,
-                 "Usage: %s [options]\n\n"
-                 "Version 1.3\n"
-                 "Options:\n"
-                 "-d | --device name   Video device name [%s]\n"
-                 "-h | --help          Print this message\n"
-                 "-m | --mmap          Use memory mapped buffers [default]\n"
-                 "-r | --read          Use read() calls\n"
-                 "-u | --userp         Use application allocated buffers\n"
-                 "-o | --output        Outputs stream to stdout\n"
-                 "-f | --format        Force format to 640x480 GREY\n"
-                 "-c | --count         Number of frames to grab [%i]\n"
-                 "",
-                 argv[0], dev_name, frame_count);
-}
 
 
 /* Func: xxxxx
@@ -1036,32 +1012,33 @@ static void usage(FILE *fp, int argc, char **argv)
  */
 int main(int argc, char **argv)
 {
-    //io = IO_METHOD_MMAP;
-    //syslog(LOG_NOTICE, "IO METHOD = MMAP");
-    //printf("IO METHOD = MMAP\r\n");
-    
-    //io = IO_METHOD_READ;
-    //syslog(LOG_NOTICE, "IO METHOD = READ");
-    //printf("IO METHOD = READ\r\n");
-
-    io = IO_METHOD_USERPTR;
-    syslog(LOG_NOTICE, "IO METHOD = USERPTR");
-    printf("IO METHOD = USERPTR\r\n");
-
     capture_init(RES_LOW);
-    usage(stdout, argc, argv);
 
     mainloop();
+    
     capture_uninit();
+    
     fprintf(stderr, "\n");
     return 0;
 }
 
 void capture_init(res_t res)
 {
+	//io = IO_METHOD_MMAP;
+    //syslog(LOG_NOTICE, "IO METHOD = MMAP");
+    //printf("IO METHOD = MMAP\r\n");
+    
+    io = IO_METHOD_READ;
+    syslog(LOG_NOTICE, "IO METHOD = READ");
+    printf("IO METHOD = READ\r\n");
+
+    //io = IO_METHOD_USERPTR;
+    //syslog(LOG_NOTICE, "IO METHOD = USERPTR");
+    //printf("IO METHOD = USERPTR\r\n");
+	
     dev_name = "/dev/video0";   //device MMIO loc
                         
-    open_device();              //identifies device and opens file
+    open_device();              //identifies device and opens MMIO
     init_device();              //verifies compatibiliy and sets resolution
     start_capturing();          //sets up buffers to hold images
 }
