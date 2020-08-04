@@ -51,10 +51,6 @@
 //
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 #define COLOR_CONVERT
-#define HRES_L 				640
-#define HRES_L_STR			"640"
-#define VRES_L 				480
-#define VRES_L_STR			"480"
 // control IO method...
 #define IO_READ				1
 #define IO_MMAP				0
@@ -995,6 +991,7 @@ int capture_photo(void)
 {
     struct timespec read_delay;
     struct timespec time_error;
+    struct timespec frame_time;
 
     read_delay.tv_sec=0;
     read_delay.tv_nsec=30000;
@@ -1037,7 +1034,17 @@ int capture_photo(void)
 			break;
 		}
 	}
-    
+	
+	//Must be semaphore protected
+	unsigned char test_buf[IMG_BUF_SIZE(HRES_L, VRES_L)];
+	capture_update(test_buf, sizeof(test_buf));
+	
+    // record when process was called
+    clock_gettime(CLOCK_REALTIME, &frame_time);  
+	
+	//Test if it worked
+	dump_ppm(test_buf, sizeof(test_buf), framecnt, &frame_time); //framecnt == iteration_cnt     
+     
 	return 0;
 } 
 
@@ -1061,7 +1068,52 @@ int capture_frame(void)
 		}
 	}
 
-	process_image(buffers[0].start, buffers[0].length);
+	capture_process(buffers[0].start, buffers[0].length);
 
 	return(1);
+}
+
+
+void capture_process(const void *p, int size)
+{
+    int i, newi, newsize=0;
+    int y_temp, y2_temp, u_temp, v_temp;
+    unsigned char *pptr = (unsigned char *)p;  
+
+    framecnt++;
+    printf("frame %d: ", framecnt);
+
+	printf("Dump YUYV converted to RGB size %d\n", size);
+   
+	// Pixels are YU and YV alternating, so YUYV which is 4 bytes
+	// We want RGB, so RGBRGB which is 6 bytes
+	//
+	for(i=0, newi=0; i<size; i=i+4, newi=newi+6)
+	{
+		y_temp=(int)pptr[i]; u_temp=(int)pptr[i+1]; y2_temp=(int)pptr[i+2]; v_temp=(int)pptr[i+3];
+		yuv2rgb(y_temp, u_temp, v_temp, &bigbuffer[newi], &bigbuffer[newi+1], &bigbuffer[newi+2]);
+		yuv2rgb(y2_temp, u_temp, v_temp, &bigbuffer[newi+3], &bigbuffer[newi+4], &bigbuffer[newi+5]);
+	}
+
+	//dump_ppm(bigbuffer, ((size*6)/4), framecnt, &frame_time); //framecnt == iteration_cnt
+
+}
+
+static int capture_copy(void * dest, int dest_sz, const void * src, int src_sz)
+{
+	if(dest_sz != src_sz)
+	{
+		printf("Incompatible buffer sizes \r\n");
+		return -1;
+	}
+	
+	memcpy(dest, src, dest_sz);
+	
+	return 0;
+}
+
+
+int capture_update(void * dest, int dest_sz)
+{
+	return capture_copy(dest, dest_sz, bigbuffer, (buffers[0].length * 6) / 4);
 }

@@ -26,6 +26,12 @@
 
 // Macros
 //
+#define HRES_L 				640
+#define HRES_L_STR			"640"
+#define VRES_L 				480
+#define VRES_L_STR			"480"
+//
+#define IMG_BUF_SIZE(h,l)	(((h)*2*(l)*6)/4)
 
 // Typedefs & Enums
 //
@@ -42,3 +48,5 @@ void capture_init(res_t res);
 void capture_uninit(void);
 int capture_photo(void);
 int capture_frame(void);
+void capture_process(const void *p, int size);
+int capture_update(void * dest, int dest_sz);
