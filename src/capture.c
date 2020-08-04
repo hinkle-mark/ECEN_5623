@@ -154,7 +154,8 @@ static int xioctl(int fh, int request, void *arg)
         return r;
 }
 
-
+// XXX Copy this over to mem.c
+//
 /* Func: xxxxx
  * Desc: xxxxx
  * Params:
@@ -334,7 +335,7 @@ static void process_image(const void *p, int size)
             yuv2rgb(y2_temp, u_temp, v_temp, &bigbuffer[newi+3], &bigbuffer[newi+4], &bigbuffer[newi+5]);
         }
 
-        dump_ppm(bigbuffer, ((size*6)/4), framecnt, &frame_time);
+        dump_ppm(bigbuffer, ((size*6)/4), framecnt, &frame_time); //framecnt == iteration_cnt
 #else
         printf("Dump YUYV converted to YY size %d\n", size);
        
@@ -1026,7 +1027,7 @@ int capture_photo(void)
 			exit(EXIT_FAILURE);
 		}
 
-		if (read_frame())
+		if (capture_frame())
 		{
 			if(nanosleep(&read_delay, &time_error) != 0)
 				perror("nanosleep");
@@ -1039,3 +1040,28 @@ int capture_photo(void)
     
 	return 0;
 } 
+
+int capture_frame(void)
+{
+	if (-1 == read(fd, buffers[0].start, buffers[0].length))
+	{
+		switch (errno)
+		{
+
+			case EAGAIN:
+				return 0;
+
+			case EIO:
+				/* Could ignore EIO, see spec. */
+
+				/* fall through */
+
+			default:
+				errno_exit("read");
+		}
+	}
+
+	process_image(buffers[0].start, buffers[0].length);
+
+	return(1);
+}
