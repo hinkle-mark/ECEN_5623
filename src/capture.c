@@ -952,17 +952,17 @@ static void open_device(void)
  * Return:
  * 	void
  */
-int main(int argc, char **argv)
-{
-    capture_init(RES_LOW);
-
-    capture_photo();
-    
-    capture_uninit();
-    
-    fprintf(stderr, "\n");
-    return 0;
-}
+//int main(int argc, char **argv)
+//{
+//    capture_init(RES_LOW);
+//
+//    capture_photo();
+//    
+//    capture_uninit();
+//    
+//    fprintf(stderr, "\n");
+//    return 0;
+//}
 
 void capture_init(res_t res)
 {

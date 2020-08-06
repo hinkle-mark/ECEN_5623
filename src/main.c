@@ -49,4 +49,15 @@
  * Return:
  * 	void
  */
+int main(int argc, char ** argv)
+{
+    capture_init(RES_LOW);
+
+    capture_photo();
+    
+    capture_uninit();
+    
+    fprintf(stderr, "\n");
+    return 0;	 
+}
 
