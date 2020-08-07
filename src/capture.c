@@ -93,11 +93,6 @@ static int              out_buf;
 static int              force_format=1;
 static int              frame_count = 1;
 //
-char ppm_header[]="P6\n#9999999999 sec 9999999999 msec \n"HRES_L_STR"x"VRES_L_STR"\n255\n";
-char ppm_dumpname[]="test00000000.ppm";
-char pgm_header[]="P5\n#9999999999 sec 9999999999 msec \n"HRES_L_STR"x"VRES_L_STR"\n255\n";
-char pgm_dumpname[]="test00000000.pgm";
-//
 unsigned int framecnt=0;
 unsigned char bigbuffer[(1280*960)];
 //
@@ -148,79 +143,6 @@ static int xioctl(int fh, int request, void *arg)
         } while (-1 == r && EINTR == errno);
 
         return r;
-}
-
-// XXX Copy this over to mem.c
-//
-/* Func: xxxxx
- * Desc: xxxxx
- * Params:
- * 	void
- * Return:
- * 	void
- */
-static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time)
-{
-    int written, i, total, dumpfd;
-   
-    snprintf(&ppm_dumpname[4], 9, "%08d", tag);
-    strncat(&ppm_dumpname[12], ".ppm", 5);
-    dumpfd = open(ppm_dumpname, O_WRONLY | O_NONBLOCK | O_CREAT, 00666);
-
-    snprintf(&ppm_header[4], 11, "%010d", (int)time->tv_sec);
-    strncat(&ppm_header[14], " sec ", 5);
-    snprintf(&ppm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
-    strncat(&ppm_header[29], " msec \n"HRES_L_STR" "VRES_L_STR"\n255\n", 19);
-    written=write(dumpfd, ppm_header, sizeof(ppm_header));
-
-    total=0;
-
-    do
-    {
-        written=write(dumpfd, p, size);
-        total+=written;
-    } while(total < size);
-
-    printf("wrote %d bytes\n", total);
-
-    close(dumpfd);
-    
-}
-
-
-/* Func: xxxxx
- * Desc: xxxxx
- * Params:
- * 	void
- * Return:
- * 	void
- */
-static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time)
-{
-    int written, i, total, dumpfd;
-   
-    snprintf(&pgm_dumpname[4], 9, "%08d", tag);
-    strncat(&pgm_dumpname[12], ".pgm", 5);
-    dumpfd = open(pgm_dumpname, O_WRONLY | O_NONBLOCK | O_CREAT, 00666);
-
-    snprintf(&pgm_header[4], 11, "%010d", (int)time->tv_sec);
-    strncat(&pgm_header[14], " sec ", 5);
-    snprintf(&pgm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
-    strncat(&pgm_header[29], " msec \n"HRES_L_STR" "VRES_L_STR"\n255\n", 19);
-    written=write(dumpfd, pgm_header, sizeof(pgm_header));
-
-    total=0;
-
-    do
-    {
-        written=write(dumpfd, p, size);
-        total+=written;
-    } while(total < size);
-
-    printf("wrote %d bytes\n", total);
-
-    close(dumpfd);
-    
 }
 
 
@@ -312,7 +234,7 @@ static void process_image(const void *p, int size)
     if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY)
     {
         printf("Dump graymap as-is size %d\n", size);
-        dump_pgm(p, size, framecnt, &frame_time);
+        //dump_pgm(p, size, framecnt, &frame_time);
     }
 
     else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
@@ -331,7 +253,7 @@ static void process_image(const void *p, int size)
             yuv2rgb(y2_temp, u_temp, v_temp, &bigbuffer[newi+3], &bigbuffer[newi+4], &bigbuffer[newi+5]);
         }
 
-        dump_ppm(bigbuffer, ((size*6)/4), framecnt, &frame_time); //framecnt == iteration_cnt
+        //dump_ppm(bigbuffer, ((size*6)/4), framecnt, &frame_time); //framecnt == iteration_cnt
 #else
         printf("Dump YUYV converted to YY size %d\n", size);
        
@@ -345,7 +267,7 @@ static void process_image(const void *p, int size)
             bigbuffer[newi+1]=pptr[i+2];
         }
 
-        dump_pgm(bigbuffer, (size/2), framecnt, &frame_time);
+        //dump_pgm(bigbuffer, (size/2), framecnt, &frame_time);
 #endif
 
     }
@@ -353,7 +275,7 @@ static void process_image(const void *p, int size)
     else if(fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24)
     {
         printf("Dump RGB as-is size %d\n", size);
-        dump_ppm(p, size, framecnt, &frame_time);
+        //dump_ppm(p, size, framecnt, &frame_time);
     }
     else
     {
@@ -943,27 +865,6 @@ static void open_device(void)
 }
 
 
-
-
-/* Func: xxxxx
- * Desc: xxxxx
- * Params:
- * 	void
- * Return:
- * 	void
- */
-//int main(int argc, char **argv)
-//{
-//    capture_init(RES_LOW);
-//
-//    capture_photo();
-//    
-//    capture_uninit();
-//    
-//    fprintf(stderr, "\n");
-//    return 0;
-//}
-
 void capture_init(res_t res)
 {
     //syslog(LOG_INFO, "IO METHOD = READ:%d MMAP:%d USERPTR:%d \r\n",
@@ -1034,17 +935,7 @@ int capture_photo(void)
 			break;
 		}
 	}
-	
-	//Must be semaphore protected
-	unsigned char test_buf[IMG_BUF_SIZE(HRES_L, VRES_L)];
-	capture_update(test_buf, sizeof(test_buf));
-	
-    // record when process was called
-    clock_gettime(CLOCK_REALTIME, &frame_time);  
-	
-	//Test if it worked
-	dump_ppm(test_buf, sizeof(test_buf), framecnt, &frame_time); //framecnt == iteration_cnt     
-     
+
 	return 0;
 } 
 

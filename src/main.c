@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+//
+#include "time.h"
+
 
 // Macros
 //
@@ -51,9 +54,23 @@
  */
 int main(int argc, char ** argv)
 {
+    int framecnt = 1;
+    struct timespec frame_time;
+    
     capture_init(RES_LOW);
 
     capture_photo();
+    
+	//Must be semaphore protected
+	unsigned char test_buf[IMG_BUF_SIZE(HRES_L, VRES_L)];
+	capture_update(test_buf, sizeof(test_buf));
+    
+    // record when process was called
+    clock_gettime(CLOCK_REALTIME, &frame_time);  
+	
+	//Test if it worked
+	mem_store(test_buf, sizeof(test_buf), framecnt, &frame_time); //framecnt == iteration_cnt     
+     
     
     capture_uninit();
     

@@ -27,9 +27,7 @@
 // Macros
 //
 #define HRES_L 				640
-#define HRES_L_STR			"640"
 #define VRES_L 				480
-#define VRES_L_STR			"480"
 //
 #define IMG_BUF_SIZE(h,l)	(((h)*2*(l)*6)/4)
 

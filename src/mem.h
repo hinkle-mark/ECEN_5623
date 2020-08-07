@@ -1,3 +1,6 @@
+#ifndef _MEM_H
+#define _MEM_H
+
 /*
  * Author:		Mark Hinkle
  * Date:		August 2nd, 2020
@@ -23,9 +26,18 @@
  
 // Includes
 //
+#include <time.h>
+
 
 // Macros
 //
+#define HRES_L_STR			"640"
+#define VRES_L_STR			"480"
 
 // Typedefs & Enums
 //
+
+// Function Declarations
+void mem_store(const void *p, int size, unsigned int tag, struct timespec *time);
+
+#endif /* _MEM_H */
