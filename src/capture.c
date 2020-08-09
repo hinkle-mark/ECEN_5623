@@ -171,7 +171,7 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     strncat(&ppm_header[14], " sec ", 5);
     snprintf(&ppm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
     strncat(&ppm_header[29], " msec \n"HRES_L_STR" "VRES_L_STR"\n255\n", 19);
-    written=write(dumpfd, ppm_header, sizeof(ppm_header));
+    written=write(dumpfd, ppm_header, sizeof(ppm_header) + 1);
 
     total=0;
 
@@ -954,14 +954,26 @@ static void open_device(void)
  */
 int main(int argc, char **argv)
 {
-    capture_init(RES_LOW);
+        capture_init(RES_LOW);
 
-    capture_photo();
+        struct timespec start_time, end_time;
+        
+        clock_gettime(CLOCK_REALTIME, &start_time);
+
+        capture_photo();
+        
+        clock_gettime(CLOCK_REALTIME, &end_time);
+        
+        printf("Start Time: %lld.%9ld \r\n", (long long)start_time.tv_sec, start_time.tv_nsec);
+        printf("End Time: %lld.%9ld \r\n", (long long)end_time.tv_sec, end_time.tv_nsec);
+        printf("Elapsed Time: %lld.%9ld \r\n", 
+                (long long)(end_time.tv_sec - start_time.tv_sec), 
+                (end_time.tv_nsec - start_time.tv_nsec));
     
-    capture_uninit();
+        capture_uninit();
     
-    fprintf(stderr, "\n");
-    return 0;
+        fprintf(stderr, "\n");
+        return 0;
 }
 
 void capture_init(res_t res)
