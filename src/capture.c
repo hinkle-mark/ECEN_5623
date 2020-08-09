@@ -960,7 +960,8 @@ int main(int argc, char **argv)
         
         clock_gettime(CLOCK_REALTIME, &start_time);
 
-        capture_photo();
+        for(int i = 0; i < 1800; i++)
+                capture_photo();
         
         clock_gettime(CLOCK_REALTIME, &end_time);
         
@@ -1017,7 +1018,6 @@ int capture_photo(void)
 		FD_ZERO(&fds);
 		FD_SET(fd, &fds);
 
-		/* Timeout. */
 		tv.tv_sec = 2;
 		tv.tv_usec = 0;
 
@@ -1046,7 +1046,7 @@ int capture_photo(void)
 			break;
 		}
 	}
-	
+
 	//Must be semaphore protected
 	unsigned char test_buf[IMG_BUF_SIZE(HRES_L, VRES_L)];
 	capture_update(test_buf, sizeof(test_buf));
